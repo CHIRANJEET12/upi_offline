@@ -14,9 +14,9 @@ const { encryptPacket } = require("../services/crypto.service");
 async function sendPacket() {
     const payment = {
         sender: "A",
-        receiver: "B",
-        amount: 500,
-        nonce: "uuid-123",
+        receiver: "D",
+        amount: 15000,
+        nonce: "uuid-12345",
         signedAt: Date.now()
     };
 
@@ -25,6 +25,12 @@ async function sendPacket() {
     // encrypt using backend public key
     const packet = encryptPacket(payment, PUBLIC_KEY);
     console.log("🔐 Encrypted Packet Created");
+
+    fs.writeFileSync(
+        "samplePacket.json",
+        JSON.stringify(packet, null, 2)
+    );
+    console.log("📦 Packet saved to samplePacket.json");
 
     //send to backend
     const res = await axios.post(

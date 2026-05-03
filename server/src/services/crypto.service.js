@@ -31,6 +31,8 @@ function encryptAes(data, aesKey){
         aesKey,
         iv
     );
+    cipher.setAAD(iv);
+
 
     let encryptedData = cipher.update(
         JSON.stringify(data),
@@ -52,12 +54,14 @@ function encryptAes(data, aesKey){
 
 // AES Decryption
 function decryptAes(iv, encryptedData, tag, aesKey){
+    const ivBuf = Buffer.from(iv, "base64");
     const decipher = crypto.createDecipheriv(
         "aes-256-gcm",
         aesKey,
         Buffer.from(iv, "base64")
     );
 
+    decipher.setAAD(ivBuf);
     decipher.setAuthTag(Buffer.from(tag, "base64"));
 
     let decryptedData = decipher.update(
@@ -74,19 +78,25 @@ function decryptAes(iv, encryptedData, tag, aesKey){
 // RSA Encrypt AES key
 function encryptRSA(aesKey, publicKey){
     return crypto.publicEncrypt(
-        publicKey,
+        {
+            key: publicKey,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            oaepHash: "sha256",
+        },
         aesKey
     ).toString("base64");
 }
-
 // RSA Decrypt AES key
 function decryptRSA(encryptedKey, privateKey) {
     return crypto.privateDecrypt(
-        privateKey,
+        {
+            key: privateKey,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            oaepHash: "sha256",
+        },
         Buffer.from(encryptedKey, "base64")
     );
 }
-
 function encryptPacket(data, publicKey){
     const aesKey = crypto.randomBytes(32);
 
