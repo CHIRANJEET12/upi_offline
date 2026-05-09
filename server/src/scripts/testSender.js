@@ -7,16 +7,17 @@ const PUBLIC_KEY = fs.readFileSync(path.join(__dirname, "../../keys/public.pem")
 console.log("PUBLIC_KEY exists:", !!PUBLIC_KEY);
 
 
-const axios = require("axios");
+// const axios = require("axios");
+const { simulateHops } = require("../../../mesh/meshSimulation");
 const { encryptPacket } = require("../services/crypto.service");
 
 // simulate offline payment
 async function sendPacket() {
     const payment = {
-        sender: "A",
+        sender: "B",
         receiver: "D",
-        amount: 15000,
-        nonce: "uuid-12345",
+        amount: 100,
+        nonce: "uuid-212216",
         signedAt: Date.now()
     };
 
@@ -33,12 +34,14 @@ async function sendPacket() {
     console.log("📦 Packet saved to samplePacket.json");
 
     //send to backend
-    const res = await axios.post(
-        "http://localhost:5000/api/bridge/ingest",
-        packet
-    );
+    // const res = await axios.post(
+    //     "http://localhost:5000/api/bridge/ingest",
+    //     packet
+    // );
 
-    console.log("📡 Backend Response:", res.data);
+    simulateHops(packet);
+
+    // console.log("📡 Backend Response:", res.data);
 
 }
 

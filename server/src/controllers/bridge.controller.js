@@ -5,6 +5,9 @@ const path = require("path");
 const cryptoService = require("../services/crypto.service");
 const { isReplay } = require("../services/nonceStore.service");
 const { preHashCheck } = require("../services/hashIdempotency.service")
+const { recordTransaction } = require("../services/ledger.service");
+const { paymentProcess } = require("../services/wallet.service")
+const { checkPacket } = require("../services/idempotency.service");
 const PRIVATE_KEY1 = fs.readFileSync(path.join(__dirname, "../../keys/private.pem"), "utf8");
 
 
@@ -16,6 +19,11 @@ const MAX_PACKET_AGE_MS = 5 * 60 * 1000;
 async function ingestPacket(req, res) {
     try{
         const packet = req.body;
+        if(!checkPacket(packet)){
+            return res.status(200).json({
+                status: "DUPLICATE_DROPPED_BY_INDEMPOTENCY_CHECK"
+            });
+        }
         const PRIVATE_KEY = PRIVATE_KEY1;
 
         if(!preHashCheck(packet)){
@@ -58,7 +66,37 @@ async function ingestPacket(req, res) {
         // seen.add(hash);
 
 
-        console.log("TRANSACTION RECEIVED:", data);
+        console.log("TRANSACTION RECEIVED TO BE PROCESSED:", data);
+
+        // payment process
+        try{
+            const paymentDetails = paymentProcess(data.sender, data.receiver, data.amount);
+
+            if (paymentDetails.status !== "BALANCE_UPDATED") {
+                return res.status(400).json(paymentDetails);
+            }
+
+            console.log("TRANSACTION UPDATED");
+        }catch (err){
+            console.error(err);
+            return res.status(500).json({
+                status: "FAILED",
+                error: err.message
+            });
+        }
+
+        // record each transaction
+        try{
+            recordTransaction(data);
+
+            console.log("TRANSACTION LOGGED");
+        }catch (err) {
+            console.error(err);
+            return res.status(500).json({
+                status: "FAILED",
+                error: err.message
+            });
+        }
 
         return res.status(200).json({
             status: "SUCCESS",

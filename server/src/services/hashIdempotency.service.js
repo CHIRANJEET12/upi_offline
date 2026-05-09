@@ -13,10 +13,12 @@ function hashFullPacket(packet){
 
 function preHashCheck(packet){
     const hash = hashFullPacket(packet);
+    console.log("hash created");
 
     if(seen.has(hash)) return false;
 
     seen.add(hash);
+    console.log("hash updated");
     return true;
 }
 
