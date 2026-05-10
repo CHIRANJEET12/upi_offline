@@ -14,14 +14,15 @@ const { encryptPacket } = require("../services/crypto.service");
 // simulate offline payment
 async function sendPacket() {
     const payment = {
-        sender: "B",
+        sender: "A",
         receiver: "D",
-        amount: 100,
-        nonce: "uuid-212216",
+        amount: 110,
+        nonce: crypto.randomUUID(),
         signedAt: Date.now()
     };
 
     console.log("📱 Original Payment:", payment);
+    console.log("NEW NONCE GENERATED:", payment.nonce);
 
     // encrypt using backend public key
     const packet = encryptPacket(payment, PUBLIC_KEY);

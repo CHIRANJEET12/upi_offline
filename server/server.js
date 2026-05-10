@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const app = require("./src/app");
+const connectDB = require("./src/config/db");
 const fs = require("fs");
 const path = require("path");
 
@@ -9,6 +10,7 @@ const privateKey = fs.readFileSync(path.join(__dirname, "/keys/private.pem"), "u
 
 const PORT = process.env.PORT || 5000;
 
+connectDB();
 
 global.publicKey = publicKey;
 global.privateKey = privateKey;

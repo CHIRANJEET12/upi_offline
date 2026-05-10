@@ -38,6 +38,7 @@ async function ingestPacket(req, res) {
                 packet,
                 PRIVATE_KEY
             )
+            console.log("RECEIVED NONCE:", data.nonce);
         }catch (e){
             console.error("⚠️ Tampered packet detected!");
             return res.status(400).json({
@@ -58,7 +59,7 @@ async function ingestPacket(req, res) {
         // const hash = hashFullPacket(packet)
 
         //duplicate check
-        if(isReplay(data.nonce)){
+        if(await isReplay(data.nonce)){
             return res.status(400).json({
                 status: "REPLAY_DETECTED"
             });

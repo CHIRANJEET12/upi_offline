@@ -14,7 +14,15 @@ function writeStoredPackets(data){
     fs.writeFileSync(STORE_FILE, JSON.stringify(data, null, 2));
 }
 
+const seen = new Set();
+
 function receivePackets(packet){
+    const id = packet.ciphertext;
+    if(seen.has(id)){
+        console.log("⚠️ Local duplicate dropped");
+        return;
+    }
+    seen.add(id);
     const store = readStoredPackets();
     store.push(packet);
     writeStoredPackets(store);
@@ -36,7 +44,11 @@ async function goOnlineandFlush(){
             const res = await axios.post(SERVER_URL, packet);
             console.log("Server:", res.data.status);
         }catch(err){
-            console.log("Upload failed:", err.message);
+            if (err.response) {
+                console.log("Server response:", err.response.data.status);
+            } else {
+                console.log("Network error:", err.message);
+            }
         }
     }
 
